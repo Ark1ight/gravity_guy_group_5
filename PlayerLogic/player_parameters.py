@@ -13,7 +13,7 @@ class Player(arcade.Sprite):
         self.change_y = 0
 
 
-        self.skill_cooldown = 1
+        self.skill_cooldown = 0.5
         self.is_dead = False
 
     def is_player_dead(self, screen_height):
