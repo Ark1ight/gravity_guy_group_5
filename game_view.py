@@ -15,6 +15,7 @@ def death_screen_display(last_x, last_y):
     img = arcade.load_texture('images/death_skull.png')
     arcade.draw_texture_rectangle(last_x, last_y, 1250 * DEATH_SCALING, 700 * DEATH_SCALING, img)
 
+
 class GameView(arcade.View):
     def __init__(self):
         super().__init__()
@@ -25,15 +26,14 @@ class GameView(arcade.View):
         self.camera = None
         self.last_press_time = 0
 
-        self.background = arcade.load_texture("images/background.png")
-        self.background_x = 0  # initial x pos
-        self.background_y = 0  # initial y pos
+    def on_show(self):
+        arcade.set_background_color(arcade.color.SKY_BLUE)  # Set background color
 
     def setup(self):
         self.scene = arcade.Scene()
         self.camera = arcade.Camera(SCREEN_WIDTH, SCREEN_HEIGHT)
 
-        #creation of Player and Walls list in the base level
+        # Creation of Player and Walls list in the base level
         self.scene.add_sprite_list("Player")
         self.scene.add_sprite_list("Walls", use_spatial_hash=True)
         self.player = Player()
@@ -51,11 +51,31 @@ class GameView(arcade.View):
             wall.center_y = 500
             self.scene.add_sprite("Walls", wall)
 
+
+        for x in range(680, 1200, 64):
+            wall = arcade.Sprite("images/shrek2.jpg", TILE_SCALING)
+            wall.center_x = x
+            wall.center_y = 500
+            self.scene.add_sprite("Walls", wall)
+
         for x in range(325, 700, 64):
             wall = arcade.Sprite("images/shrek2.jpg", TILE_SCALING)
             wall.center_x = x
             wall.center_y = 200
             self.scene.add_sprite("Walls", wall)
+
+        for x in range(1500,2000, 64):
+            wall = arcade.Sprite("images/shrek2.jpg", TILE_SCALING)
+            wall.center_x = x
+            wall.center_y = 32
+            self.scene.add_sprite("Walls", wall)
+
+        for x in range(2200,2700, 64):
+            wall = arcade.Sprite("images/shrek2.jpg", TILE_SCALING)
+            wall.center_x = x
+            wall.center_y = 500
+            self.scene.add_sprite("Walls", wall)
+
 
         self.physics_engine = arcade.PhysicsEnginePlatformer(
             self.player, gravity_constant=self.current_gravity, walls=self.scene["Walls"]
@@ -63,10 +83,9 @@ class GameView(arcade.View):
 
     def on_draw(self):
         self.clear()
-        arcade.draw_lrwh_rectangle_textured(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, self.background)
         self.scene.draw()
         if self.player.is_dead:
-            death_screen_display(self.player.center_x,self.player.center_y)
+            death_screen_display(self.player.center_x, self.player.center_y)
         self.camera.use()
 
     def center_camera_to_player(self):
@@ -81,13 +100,12 @@ class GameView(arcade.View):
 
     def on_key_press(self, key, modifiers, current_gravity=GRAVITY):
         if key == arcade.key.SPACE:
-
-            #cooldown on gravity skill
+            # Cooldown on gravity skill
             current_time = time.time()
             if current_time - self.last_press_time < self.player.skill_cooldown:
                 return
             self.last_press_time = current_time
-            #change of gravity
+            # Change of gravity
             self.current_gravity *= -1
             self.physics_engine = arcade.PhysicsEnginePlatformer(
                 self.player, gravity_constant=self.current_gravity, walls=self.scene["Walls"]
