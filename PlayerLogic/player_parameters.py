@@ -7,8 +7,8 @@ class Player(arcade.Sprite):
     def __init__(self, image_source="images/test.png"):
         super().__init__(image_source, CHARACTER_SCALING)
 
-        self.center_x = 64
-        self.center_y = 128
+        self.center_x = 200
+        self.center_y = 300
         self.change_x = 0
         self.change_y = 0
 

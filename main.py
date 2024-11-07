@@ -1,9 +1,10 @@
 import arcade
 from game_view import GameView
+from game_window import GameWindow
 
 # Constantes pour la fenêtre
 SCREEN_WIDTH = 800
-SCREEN_HEIGHT = 600
+SCREEN_HEIGHT = 800
 SCREEN_TITLE = "Menu Principal Arcade"
 
 class MenuView(arcade.View):
@@ -35,7 +36,7 @@ class MenuView(arcade.View):
 
 def main():
     """ Fonction principale """
-    window = arcade.Window(SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_TITLE)
+    window = GameWindow(SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_TITLE)
     menu_view = MenuView()
     window.show_view(menu_view)
     arcade.run()

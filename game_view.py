@@ -4,12 +4,12 @@ import arcade
 from PlayerLogic.player_parameters import Player
 
 # Constants
-SCREEN_WIDTH = 1000
-SCREEN_HEIGHT = 650
+SCREEN_WIDTH = 800
+SCREEN_HEIGHT = 800
 SCREEN_TITLE = "Gravity Guy"
 PLAYER_MOVEMENT_SPEED = 10
 GRAVITY = 1
-TILE_SCALING = 0.1
+TILE_SCALING = 1
 DEATH_SCALING = 0.5
 def death_screen_display(last_x, last_y):
     img = arcade.load_texture('images/death_skull.png')
@@ -19,66 +19,44 @@ def death_screen_display(last_x, last_y):
 class GameView(arcade.View):
     def __init__(self):
         super().__init__()
+        self.tile_map = None
         self.scene = None
         self.player = None
         self.physics_engine = None
         self.current_gravity = GRAVITY
         self.camera = None
         self.last_press_time = 0
+        self.score = 0
 
     def on_show(self):
         arcade.set_background_color(arcade.color.SKY_BLUE)  # Set background color
 
     def setup(self):
-        self.scene = arcade.Scene()
+        #Pour éditer la map, utiliser Tiled (https://www.mapeditor.org/)
+        map_name = "resources/maps/map.json"
+
+        layer_options = {
+            "Platforms": {
+                "use_spatial_hash": True,
+            },
+        }
+
+        self.tile_map = arcade.load_tilemap(map_name, TILE_SCALING, layer_options)
+
+        self.scene = arcade.Scene.from_tilemap(self.tile_map)
+
+        self.score = 0
+
+        # self.scene = arcade.Scene()
         self.camera = arcade.Camera(SCREEN_WIDTH, SCREEN_HEIGHT)
 
         # Creation of Player and Walls list in the base level
         self.scene.add_sprite_list("Player")
-        self.scene.add_sprite_list("Walls", use_spatial_hash=True)
         self.player = Player()
         self.scene.add_sprite("Player", self.player)
 
-        for x in range(0, 1250, 64):
-            wall = arcade.Sprite("images/shrek2.jpg", TILE_SCALING)
-            wall.center_x = x
-            wall.center_y = 32
-            self.scene.add_sprite("Walls", wall)
-
-        for x in range(0, 320, 64):
-            wall = arcade.Sprite("images/shrek2.jpg", TILE_SCALING)
-            wall.center_x = x
-            wall.center_y = 500
-            self.scene.add_sprite("Walls", wall)
-
-
-        for x in range(680, 1200, 64):
-            wall = arcade.Sprite("images/shrek2.jpg", TILE_SCALING)
-            wall.center_x = x
-            wall.center_y = 500
-            self.scene.add_sprite("Walls", wall)
-
-        for x in range(325, 700, 64):
-            wall = arcade.Sprite("images/shrek2.jpg", TILE_SCALING)
-            wall.center_x = x
-            wall.center_y = 200
-            self.scene.add_sprite("Walls", wall)
-
-        for x in range(1500,2000, 64):
-            wall = arcade.Sprite("images/shrek2.jpg", TILE_SCALING)
-            wall.center_x = x
-            wall.center_y = 32
-            self.scene.add_sprite("Walls", wall)
-
-        for x in range(2200,2700, 64):
-            wall = arcade.Sprite("images/shrek2.jpg", TILE_SCALING)
-            wall.center_x = x
-            wall.center_y = 500
-            self.scene.add_sprite("Walls", wall)
-
-
         self.physics_engine = arcade.PhysicsEnginePlatformer(
-            self.player, gravity_constant=self.current_gravity, walls=self.scene["Walls"]
+            self.player, gravity_constant=self.current_gravity, walls=self.scene["Platforms"]
         )
 
     def on_draw(self):
@@ -108,7 +86,7 @@ class GameView(arcade.View):
             # Change of gravity
             self.current_gravity *= -1
             self.physics_engine = arcade.PhysicsEnginePlatformer(
-                self.player, gravity_constant=self.current_gravity, walls=self.scene["Walls"]
+                self.player, gravity_constant=self.current_gravity, walls=self.scene["Platforms"]
             )
         elif key == arcade.key.RIGHT or key == arcade.key.D:
             self.player.change_x = PLAYER_MOVEMENT_SPEED
