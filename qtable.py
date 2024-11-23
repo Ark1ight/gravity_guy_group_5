@@ -7,12 +7,15 @@ REWARD_GOAL = 1000
 REWARD_CHANGE_GRAV = -10
 REWARD_DIE = -1000
 
-ACTION_CHANGE_GRAV = ""
-ACTION_DO_NOTHING = ""
+ACTION_CHANGE_GRAV = True
+ACTION_DO_NOTHING = False
 
 MOVES = {ACTION_CHANGE_GRAV, ACTION_DO_NOTHING}
 ACTIONS = [ACTION_CHANGE_GRAV, ACTION_DO_NOTHING]
 
+
+def arg_max(table):
+    return max(table, key=table.get)
 
 class QTable:
     def __init__(self, learning_rate=1, discount_factor=0.9):
@@ -20,8 +23,8 @@ class QTable:
         self.learning_rate = learning_rate
         self.discount_factor = discount_factor
 
-    def arg_max(table):
-        return max(table, key=table.get)
+    def get_state_key(self, environment_matrix, player_position, gravity):
+        return tuple(map(tuple, environment_matrix)), player_position, gravity
 
     def set(self, state, action, reward, new_state):
         if state not in self.dic:
@@ -47,7 +50,7 @@ class QTable:
 
     def best_action(self, position):
         if position in self.dic:
-            return self.arg_max(self.dic[position])
+            return arg_max(self.dic[position])
         else:
             return choice(ACTIONS)
 
