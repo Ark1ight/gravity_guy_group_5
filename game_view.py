@@ -46,15 +46,23 @@ class GameView(arcade.View):
 
         self.tile_map = arcade.load_tilemap(map_name, TILE_SCALING, layer_options)
 
-        a = self.tile_map.sprite_lists["Platforms"]
+        platforms_layer = self.tile_map.sprite_lists["Platforms"]
+
+        coins_layer = self.tile_map.sprite_lists["Coins"]
 
         self.map_matrix = [[0 for _ in range(self.tile_map.width)] for _ in range(self.tile_map.height)]
 
-        for sprite in a:
+        for sprite in platforms_layer:
             column = int(sprite.center_x // 128)
             row = int((self.tile_map.height * self.tile_map.height - sprite.center_y) // 128)
 
             self.map_matrix[row][column] = 1
+        
+        for sprite in coins_layer:
+            column = int(sprite.center_x // 128)
+            row = int((self.tile_map.height * self.tile_map.height - sprite.center_y) // 128)
+
+            self.map_matrix[row][column] = 2
 
         self.scene = arcade.Scene.from_tilemap(self.tile_map)
 
@@ -106,11 +114,15 @@ class GameView(arcade.View):
             self.player.change_x = PLAYER_MOVEMENT_SPEED
 
     def get_environment(self, current_tile):
-        env = None
+        env = []
         for i in range(0, 7):
+            env.append([])
             for j in range(current_tile, current_tile + 3):
-                pass
-            #get agent environment (ie, the next three tiles)
+                env[i].append(self.map_matrix[i][j])
+
+        player_x_pos = int(self.player.center_x // 128)
+        # A voir sous quel format envoyer l'environnement a la qtable
+        return env
 
     def on_update(self, delta_time):
         if not self.player.is_dead:
@@ -119,5 +131,6 @@ class GameView(arcade.View):
             self.player.is_player_dead(SCREEN_HEIGHT)
             if self.is_game_started:
                 if int(self.lastPos) >= int(self.player.center_x % 128):
-                    current_tile = (self.player.center_x // 128) + 1
+                    current_tile = int(self.player.center_x // 128)
+                    env = self.get_environment(current_tile)
                 self.lastPos = self.player.center_x % 128
