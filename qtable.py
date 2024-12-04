@@ -1,12 +1,6 @@
 from random import choice
 import pickle
 
-REWARD_DEFAULT = 1
-REWARD_COIN = 100
-REWARD_GOAL = 1000
-REWARD_CHANGE_GRAV = -10
-REWARD_DIE = -1000
-
 ACTION_CHANGE_GRAV = True
 ACTION_DO_NOTHING = False
 
@@ -16,6 +10,7 @@ ACTIONS = [ACTION_CHANGE_GRAV, ACTION_DO_NOTHING]
 
 def arg_max(table):
     return max(table, key=table.get)
+
 
 class QTable:
     def __init__(self, learning_rate=1, discount_factor=0.9):
