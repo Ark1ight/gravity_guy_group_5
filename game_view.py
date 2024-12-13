@@ -2,6 +2,8 @@
 import time
 import arcade
 import arcade.color
+
+from EnemyLogic.enemy_parameters import Enemy
 from PlayerLogic.player_parameters import Player
 from qtable import QTable
 
@@ -16,10 +18,12 @@ SCREEN_WIDTH = 800
 SCREEN_HEIGHT = 800
 SCREEN_TITLE = "Gravity Guy"
 PLAYER_MOVEMENT_SPEED = 3
-GRAVITY = 10
+
+PLAYER_GRAVITY = 10
+ENEMY_GRAVITY = 10
 TILE_SCALING = 1
 DEATH_SCALING = 0.5
-
+ENEMY_SPAWN_DELAY = 1
 
 def death_screen_display(last_x, last_y):
     img = arcade.load_texture("images/death_skull.png")
@@ -34,8 +38,17 @@ class GameView(arcade.View):
         self.tile_map = None
         self.scene = None
         self.player = None
+
+        self.enemy_bot = None
+        self.enemy_bot_spawn_time = 0
+        self.has_enemy_spawned = False
+
         self.physics_engine = None
-        self.current_gravity = GRAVITY
+        self.enemy_physics_engine = None
+
+        self.player_current_gravity = PLAYER_GRAVITY
+        self.enemy_current_gravity = ENEMY_GRAVITY
+
         self.camera = None
         self.last_press_time = 0
         self.score = 0
@@ -47,6 +60,8 @@ class GameView(arcade.View):
         self.action_history = []
         self.score_history = []
         self.state_history = []
+
+
 
     def on_show(self):
         arcade.set_background_color(arcade.color.SKY_BLUE)  # Set background color
@@ -99,13 +114,32 @@ class GameView(arcade.View):
         self.player = Player()
         self.scene.add_sprite("Player", self.player)
 
+        self.scene.add_sprite_list("Enemy")
+        self.enemy_bot = None
+
         self.physics_engine = arcade.PhysicsEnginePlatformer(
             self.player,
-            gravity_constant=self.current_gravity,
+            gravity_constant=self.player_current_gravity,
             walls=self.scene["Platforms"],
         )
 
         # self.qtable = QTable()
+
+    def spawn_enemy(self):
+        if self.enemy_bot is None:  # Spawn only if no enemy exists
+            print("Spawning enemy")
+            self.enemy_bot = Enemy()
+            self.enemy_bot.center_x = 200  # Adjust position as needed
+            self.enemy_bot.center_y = 300  # Adjust position as needed
+
+            self.enemy_physics_engine = arcade.PhysicsEnginePlatformer(
+                self.enemy_bot,
+                gravity_constant=self.enemy_current_gravity,
+                walls=self.scene["Platforms"],
+            )
+            self.scene.add_sprite("Enemy", self.enemy_bot)
+            self.has_enemy_spawned = True
+
 
     def on_draw(self):
         self.clear()
@@ -138,10 +172,10 @@ class GameView(arcade.View):
             return
         self.last_press_time = current_time
         # Change of gravity
-        self.current_gravity *= -1
+        self.player_current_gravity *= -1
         self.physics_engine = arcade.PhysicsEnginePlatformer(
             self.player,
-            gravity_constant=self.current_gravity,
+            gravity_constant=self.player_current_gravity,
             walls=self.scene["Platforms"],
         )
         self.score += REWARD_CHANGE_GRAV
@@ -162,7 +196,7 @@ class GameView(arcade.View):
 
         player_x_pos = int(self.player.center_y // 128)
         # A voir sous quel format envoyer l'environnement a la qtable
-        return env, player_x_pos, self.current_gravity
+        return env, player_x_pos, self.player_current_gravity
 
     def get_score(self):
         if self.player.is_player_dead(SCREEN_HEIGHT):
@@ -171,23 +205,33 @@ class GameView(arcade.View):
             self.score += REWARD_DEFAULT
 
     def restart_game(self):
+        # Player restart
         self.player.center_x = 200
         self.player.center_y = 300
         self.player.change_x = 0
         self.player.change_y = 0
         self.player.is_dead = False
+        self.player.change_x = PLAYER_MOVEMENT_SPEED
+
+        # Enemy restart
+        if self.enemy_bot:
+            self.enemy_bot.remove_from_sprite_lists()
+            self.enemy_bot = None
+        self.enemy_bot_spawn_time = 0
+        self.has_enemy_spawned = False
+
+        # Game restart
         self.is_game_started = 1
-        self.current_gravity = GRAVITY
+        self.player_current_gravity = PLAYER_GRAVITY
         self.action_history = []
         self.score_history = []
         self.state_history = []
         self.score = 0
         self.physics_engine = arcade.PhysicsEnginePlatformer(
             self.player,
-            gravity_constant=self.current_gravity,
+            gravity_constant=self.player_current_gravity,
             walls=self.scene["Platforms"],
         )
-        self.player.change_x = PLAYER_MOVEMENT_SPEED
 
     def on_update(self, delta_time):
         if not self.player.is_dead:
@@ -206,6 +250,7 @@ class GameView(arcade.View):
                     self.state_history[-1],
                 )
                 self.restart_game()
+
             if self.is_game_started:
                 if int(self.lastPos) >= int(self.player.center_x % 128):
                     current_tile = int(self.player.center_x // 128)
@@ -225,3 +270,21 @@ class GameView(arcade.View):
                     self.state_history.append(state)
                     self.score_history.append(self.score)
                 self.lastPos = self.player.center_x % 128
+
+        if not self.has_enemy_spawned and self.is_game_started:
+            self.enemy_bot_spawn_time += delta_time
+            if self.enemy_bot_spawn_time >= ENEMY_SPAWN_DELAY:
+                self.spawn_enemy()
+                self.enemy_bot_spawn_time = 0  # Reset the spawn timer
+
+        if self.enemy_bot and self.enemy_physics_engine:
+            self.enemy_physics_engine.update()
+            # Update the enemy's position and check if it goes off-screen
+        if self.enemy_bot:
+            self.enemy_bot.update()
+            self.enemy_bot.center_x += 3  # Move enemy to the left
+            if self.enemy_bot.center_x < 0:  # Enemy goes off-screen
+                self.enemy_bot.remove_from_sprite_lists()
+                self.enemy_bot = None
+                self.enemy_spawned = False  # Allow the enemy to respawn
+
