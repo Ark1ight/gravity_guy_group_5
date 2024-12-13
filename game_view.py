@@ -291,7 +291,7 @@ class GameView(arcade.View):
             self.enemy_bot.update()
             self.enemy_bot.center_x += PLAYER_MOVEMENT_SPEED
             current_time = time.time()
-            while current_time - self.player_actions[0][0] >= 0.75:
+            while self.player_actions and current_time - self.player_actions[0][0] >= 1:
                 action = self.player_actions.pop(0)[1]
                 if action == ACTION_CHANGE_GRAV:
                     self.enemy_current_gravity *= -1
