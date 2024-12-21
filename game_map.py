@@ -1,4 +1,5 @@
 import arcade
+import time
 
 from PlayerLogic.player_parameters import Player
 
@@ -11,11 +12,12 @@ class Map:
         self.physics_engine = None
         self.player = None
         self.score = None
-        self.camera = None
         self.enemy_bot = None
         self.tile_map = None
         self.scene = None
         self.map_matrix = None
+        self.last_press_time = None
+        self.player_current_gravity = 1
 
 
     def setup(self):
@@ -70,3 +72,14 @@ class Map:
         # Creation of Enemy and Walls list in the base level
         self.scene.add_sprite_list("Enemy")
         self.enemy_bot = None
+
+    def get_environment(self, current_tile):
+        env = []
+        for i in range(0, 7):
+            env.append([])
+            for j in range(current_tile, current_tile + 3):
+                env[i].append(self.map_matrix[i][j])
+
+        player_x_pos = int(self.player.center_y // 128)
+        # A voir sous quel format envoyer l'environnement a la qtable
+        return env, player_x_pos, self.player_current_gravity
