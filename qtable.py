@@ -21,26 +21,16 @@ class QTable:
     def get_state_key(self, environment_matrix, player_position, gravity):
         return tuple(map(tuple, environment_matrix)), player_position, gravity
 
-    def set(self, state, action, reward, new_state):
+    def set(self, state, action, reward):
         if state not in self.dic:
             self.dic[state] = {
                 ACTION_CHANGE_GRAV: 0,
                 ACTION_DO_NOTHING: 0,
             }
-        if new_state not in self.dic:
-            self.dic[new_state] = {
-                ACTION_CHANGE_GRAV: 0,
-                ACTION_DO_NOTHING: 0,
-            }
 
-        self.dic[state][action] += reward
-
-        delta = (
-            reward
-            + self.discount_factor * max(self.dic[new_state].values())
-            - self.dic[state][action]
-        )
-        self.dic[state][action] += self.learning_rate * delta
+        current_value = self.dic[state][action]
+        updated_value = current_value + self.learning_rate * (reward - current_value)
+        self.dic[state][action] = updated_value
         # Q(s, a) = Q(s, a) + alpha * [reward + gamma * max(S', a) - Q(s, a)]
 
     def best_action(self, position):

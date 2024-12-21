@@ -28,7 +28,7 @@ class Agent:
             action = self.best_action()
 
         new_position, reward = self.env.move(self.position, action)
-        self.qtable.set(self.position, action, reward, new_position)
+        self.qtable.set(self.position, action, reward)
         self.position = new_position
         self.score += reward
 
