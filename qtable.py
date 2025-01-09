@@ -18,8 +18,8 @@ class QTable:
         self.learning_rate = learning_rate
         self.discount_factor = discount_factor
 
-    def get_state_key(self, environment_matrix, player_position, gravity):
-        return tuple(map(tuple, environment_matrix)), player_position, gravity
+    def get_state_key(self, environment):
+        return environment
 
     def set(self, state, action, reward):
         if state not in self.dic:
