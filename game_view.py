@@ -1,5 +1,6 @@
 import arcade
 import arcade.color
+import matplotlib.pyplot as plt
 
 from game_map import Map
 from qtable import QTable
@@ -32,7 +33,6 @@ TILE_SIZE = 64
 #         last_x, last_y, 1250 * DEATH_SCALING, 700 * DEATH_SCALING, img
 #     )
 
-
 class GameView(arcade.View):
     def __init__(self):
         super().__init__()
@@ -47,6 +47,7 @@ class GameView(arcade.View):
         self.action_history = []
         self.score_history = []
         self.state_history = []
+        self.run_result_history = []
 
     def on_show(self):
         arcade.set_background_color(arcade.color.SKY_BLUE)  # Set background color
@@ -58,6 +59,14 @@ class GameView(arcade.View):
 
     # def spawn_enemy(self, x_position):
     #     self.map.spawn_enemy(x_position)
+
+
+    def show_graph(self):
+        plt.plot(self.run_result_history)
+        plt.title("Score evolution")
+        plt.xlabel("Run")
+        plt.ylabel("Score")
+        plt.show()
 
     def on_draw(self):
         self.clear()
@@ -143,6 +152,7 @@ class GameView(arcade.View):
         # self.__init__()
 
         # Game restart
+        self.run_result_history.append(self.score)
         self.is_game_started = 1
         self.map.setup()
         self.action_history = []

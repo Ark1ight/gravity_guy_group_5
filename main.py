@@ -1,4 +1,6 @@
 import arcade
+
+import game_view
 from game_view import GameView
 from game_window import GameWindow
 
@@ -9,6 +11,9 @@ SCREEN_TITLE = "Menu Principal Arcade"
 
 
 class MenuView(arcade.View):
+    game_view = None
+    def __init__(self):
+        super().__init__()
     def on_show(self):
         arcade.set_background_color(arcade.color.DARK_BLUE)
 
@@ -52,10 +57,10 @@ class MenuView(arcade.View):
     def on_key_press(self, key, modifiers):
         if key == arcade.key.ENTER:
             # lauching game view
-            game_view = GameView()
+            self.game_view = GameView()
             # Initialise view
-            game_view.setup()
-            self.window.show_view(game_view)
+            self.game_view.setup()
+            self.window.show_view(self.game_view)
         elif key == arcade.key.ESCAPE:
             arcade.close_window()
 
@@ -66,7 +71,7 @@ def main():
     menu_view = MenuView()
     window.show_view(menu_view)
     arcade.run()
-
+    menu_view.game_view.show_graph()
 
 if __name__ == "__main__":
     main()
