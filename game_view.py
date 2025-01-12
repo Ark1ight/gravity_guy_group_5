@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 from game_map import Map
 from qtable import QTable
 
-REWARD_DEFAULT = 10
+REWARD_DEFAULT = 0
 REWARD_COIN = 100
 REWARD_GOAL = 1000
 REWARD_CHANGE_GRAV = -5
@@ -24,7 +24,7 @@ TILE_SCALING = 1
 DEATH_SCALING = 0.5
 ENEMY_SPAWN_DELAY = 1
 
-TILE_SIZE = 64
+TILE_SIZE = 128
 
 
 # def death_screen_display(last_x, last_y):
@@ -40,7 +40,8 @@ class GameView(arcade.View):
 
         self.camera = None
         self.score = 0
-        self.lastPos = 0
+        self.last_action_pos = 0
+        self.last_it_pos = 0
         self.is_game_started = 0
         self.qtable = QTable()
 
@@ -142,6 +143,8 @@ class GameView(arcade.View):
     def get_score(self, do_change_grav=None):
         if self.map.player.is_dead:
             self.score += REWARD_DIE
+        elif int(self.last_it_pos) == int(self.map.player.center_x):
+            self.score += REWARD_WALL
         elif do_change_grav:
             self.score += REWARD_CHANGE_GRAV
         else:
@@ -162,7 +165,8 @@ class GameView(arcade.View):
         self.map.player.change_x = PLAYER_MOVEMENT_SPEED
 
     def get_agent_action(self):
-        self.lastPos = self.map.player.center_x % TILE_SIZE
+        self.last_action_pos = self.map.player.center_x % TILE_SIZE
+
         env = self.get_environment()
         state = self.qtable.get_state_key(env)
         action = self.qtable.best_action(state)
@@ -180,6 +184,23 @@ class GameView(arcade.View):
         self.state_history.append(state)
         self.score_history.append(self.score)
 
+    def do_player_choose_action(self):
+        if int(self.last_action_pos) >= int(self.map.player.center_x % TILE_SIZE):
+            return True
+        elif int(self.last_it_pos) == int(self.map.player.center_x):
+            return True
+        return False
+
+    def finish_line(self):
+        if self.map.is_player_at_finish_line():
+            self.score += REWARD_GOAL
+            self.qtable.set(
+                self.state_history[-1],
+                self.action_history[-1],
+                self.score - self.score_history[-1],
+            )
+            self.restart_game()
+
     def on_update(self, delta_time):
         # Player update
         if not self.map.player.is_dead:
@@ -195,10 +216,12 @@ class GameView(arcade.View):
                     self.score - self.score_history[-1],
                 )
                 self.restart_game()
+            self.finish_line()
             # Game update
             if self.is_game_started:
-                if int(self.lastPos) >= int(self.map.player.center_x % TILE_SIZE):
+                if self.do_player_choose_action():
                     self.get_agent_action()
+                self.last_it_pos = self.map.player.center_x
 
                     # Ennemy Logic
 

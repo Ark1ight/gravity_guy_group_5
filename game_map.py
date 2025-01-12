@@ -19,6 +19,7 @@ class Map:
         self.scene = None
         self.map_matrix = None
         self.last_press_time = None
+        self.finish_line_x = None
 
     def setup(self):
         # Pour éditer la map, utiliser Tiled (https://www.mapeditor.org/)
@@ -34,6 +35,7 @@ class Map:
 
         platforms_layer = self.tile_map.sprite_lists["Platforms"]
         coins_layer = self.tile_map.sprite_lists["Coins"]
+        finish_layer = self.tile_map.sprite_lists["Finish"]
 
         self.map_matrix = [
             [0 for _ in range(self.tile_map.width)] for _ in range(self.tile_map.height)
@@ -56,6 +58,10 @@ class Map:
             )
 
             self.map_matrix[row][column] = 2
+
+        for sprite in finish_layer:
+            column = int(sprite.center_x // TILE_SIZE)
+            self.finish_line_x = column
 
         self.scene = arcade.Scene.from_tilemap(self.tile_map)
         # Creation of Player and Walls list in the base level
@@ -106,6 +112,10 @@ class Map:
                 walls=self.scene["Platforms"],
             )
 
+    def is_player_at_finish_line(self):
+        if (self.player.center_x // TILE_SIZE) == self.finish_line_x:
+            return True
+
     def get_environment(self):
         player_current_x = int(self.player.center_x // TILE_SIZE)
         # Le y=0 de la matrice est en haut,alors que celui de l'écran
@@ -114,8 +124,8 @@ class Map:
             (self.tile_map.height * TILE_SIZE - self.player.center_y) // TILE_SIZE
         )
 
-        radar_current_side = False
         radar_opposite_side = False
+        radar_current_side = False
         radar_front = False
 
         current_gravity = self.player.current_gravity
@@ -124,14 +134,14 @@ class Map:
             for i in range(player_current_y, -1, -1):
                 if current_gravity > 0:
                     if self.map_matrix[i][player_current_x + 1] == 1:
-                        radar_current_side = True
+                        radar_opposite_side = True
                         break
                 else:
                     if self.map_matrix[i][player_current_x + 1] == 1:
-                        radar_opposite_side = True
+                        radar_current_side = True
                         break
 
-            for i in range(player_current_x, player_current_x + 2):
+            for i in range(player_current_x, player_current_x + 1):
                 if self.map_matrix[player_current_y][i] == 1:
                     radar_front = True
                     break
@@ -139,14 +149,14 @@ class Map:
             for i in range(player_current_y, 7, 1):
                 if current_gravity > 0:
                     if self.map_matrix[i][player_current_x + 1] == 1:
-                        radar_opposite_side = True
+                        radar_current_side = True
                         break
                 else:
                     if self.map_matrix[i][player_current_x + 1] == 1:
-                        radar_current_side = True
+                        radar_opposite_side = True
                         break
-
+            pass
         except Exception:
             # out of bound
             return (0, 0, 0)
-        return (radar_current_side, radar_front, radar_opposite_side)
+        return (radar_opposite_side, radar_front, radar_current_side)
