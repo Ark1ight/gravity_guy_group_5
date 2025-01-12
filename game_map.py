@@ -4,10 +4,9 @@ from EnemyLogic.enemy_parameters import Enemy
 from PlayerLogic.player_parameters import Player
 
 PLAYER_MOVEMENT_SPEED = 3
-TILE_SCALING = 1
+TILE_SCALING = 0.39
 TILE_SIZE = 128
 
-PLAYER_GRAVITY = 10
 ENEMY_GRAVITY = 10
 
 
@@ -23,7 +22,7 @@ class Map:
 
     def setup(self):
         # Pour éditer la map, utiliser Tiled (https://www.mapeditor.org/)
-        map_name = "resources/maps/map.json"
+        map_name = "resources/maps/map2.json"
 
         layer_options = {
             "Platforms": {
@@ -42,16 +41,19 @@ class Map:
         ]
 
         for sprite in platforms_layer:
-            column = int(sprite.center_x // TILE_SIZE)
+            column = int((sprite.center_x) // (TILE_SIZE * TILE_SCALING))
             row = int(
-                (self.tile_map.height * self.tile_map.height - sprite.center_y)
-                // TILE_SIZE
+                (self.tile_map.height * (TILE_SIZE * TILE_SCALING) - (sprite.center_y)) // (TILE_SIZE * TILE_SCALING)
             )
 
             self.map_matrix[row][column] = 1
 
+        # player_current_y = int(
+        #     (self.tile_map.height * TILE_SIZE - self.player.center_y) // TILE_SIZE
+        # )
+
         for sprite in coins_layer:
-            column = int(sprite.center_x // TILE_SIZE)
+            column = int((sprite.center_x * TILE_SCALING) // TILE_SIZE)
             row = int(
                 (self.tile_map.height * self.tile_map.height - sprite.center_y)
                 // TILE_SIZE
@@ -60,7 +62,7 @@ class Map:
             self.map_matrix[row][column] = 2
 
         for sprite in finish_layer:
-            column = int(sprite.center_x // TILE_SIZE)
+            column = int((sprite.center_x * TILE_SCALING) // TILE_SIZE)
             self.finish_line_x = column
 
         self.scene = arcade.Scene.from_tilemap(self.tile_map)
@@ -113,15 +115,16 @@ class Map:
             )
 
     def is_player_at_finish_line(self):
-        if (self.player.center_x // TILE_SIZE) == self.finish_line_x:
+        if (self.player.relative_center_x() // TILE_SIZE) == self.finish_line_x:
             return True
 
     def get_environment(self):
-        player_current_x = int(self.player.center_x // TILE_SIZE)
+        map_height = len(self.map_matrix)
+        player_current_x = int(self.player.relative_center_x() // TILE_SIZE)
         # Le y=0 de la matrice est en haut,alors que celui de l'écran
         # est en bas, il faut donc bidouiller un peu
         player_current_y = int(
-            (self.tile_map.height * TILE_SIZE - self.player.center_y) // TILE_SIZE
+            (self.tile_map.height * TILE_SIZE - self.player.relative_center_y()) // TILE_SIZE
         )
 
         radar_opposite_side = False
@@ -141,12 +144,12 @@ class Map:
                         radar_current_side = True
                         break
 
-            for i in range(player_current_x, player_current_x + 1):
+            for i in range(player_current_x, player_current_x + 2):
                 if self.map_matrix[player_current_y][i] == 1:
                     radar_front = True
                     break
 
-            for i in range(player_current_y, 7, 1):
+            for i in range(player_current_y, map_height, 1):
                 if current_gravity > 0:
                     if self.map_matrix[i][player_current_x + 1] == 1:
                         radar_current_side = True

@@ -12,8 +12,10 @@ SCREEN_TITLE = "Menu Principal Arcade"
 
 class MenuView(arcade.View):
     game_view = None
+
     def __init__(self):
         super().__init__()
+
     def on_show(self):
         arcade.set_background_color(arcade.color.DARK_BLUE)
 
@@ -71,7 +73,8 @@ def main():
     menu_view = MenuView()
     window.show_view(menu_view)
     arcade.run()
-    menu_view.game_view.show_graph()
+    # menu_view.game_view.show_graph()
+
 
 if __name__ == "__main__":
     main()

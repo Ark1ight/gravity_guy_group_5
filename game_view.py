@@ -20,7 +20,7 @@ PLAYER_MOVEMENT_SPEED = 3
 
 PLAYER_GRAVITY = 10
 ENEMY_GRAVITY = 10
-TILE_SCALING = 1
+TILE_SCALING = 0.39
 DEATH_SCALING = 0.5
 ENEMY_SPAWN_DELAY = 1
 
@@ -41,7 +41,8 @@ class GameView(arcade.View):
         self.camera = None
         self.score = 0
         self.last_action_pos = 0
-        self.last_it_pos = 0
+        self.last_it_pos_x = 0
+        self.last_it_pos_y = 0
         self.is_game_started = 0
         self.qtable = QTable()
 
@@ -143,7 +144,7 @@ class GameView(arcade.View):
     def get_score(self, do_change_grav=None):
         if self.map.player.is_dead:
             self.score += REWARD_DIE
-        elif int(self.last_it_pos) == int(self.map.player.center_x):
+        elif int(self.last_it_pos_x) == int(self.map.player.center_x):
             self.score += REWARD_WALL
         elif do_change_grav:
             self.score += REWARD_CHANGE_GRAV
@@ -162,10 +163,12 @@ class GameView(arcade.View):
         self.score_history = []
         self.state_history = []
         self.score = 0
+        self.last_action_pos = 0
+        self.last_it_pos_x = 0
         self.map.player.change_x = PLAYER_MOVEMENT_SPEED
 
     def get_agent_action(self):
-        self.last_action_pos = self.map.player.center_x % TILE_SIZE
+        self.last_action_pos = int(self.map.player.center_x // TILE_SIZE)
 
         env = self.get_environment()
         state = self.qtable.get_state_key(env)
@@ -185,9 +188,9 @@ class GameView(arcade.View):
         self.score_history.append(self.score)
 
     def do_player_choose_action(self):
-        if int(self.last_action_pos) >= int(self.map.player.center_x % TILE_SIZE):
+        if self.last_action_pos < int(self.map.player.center_x // TILE_SIZE):
             return True
-        elif int(self.last_it_pos) == int(self.map.player.center_x):
+        elif int(self.last_it_pos_x) == int(self.map.player.center_x) and int(self.last_it_pos_y) == int(self.map.player.center_y):
             return True
         return False
 
@@ -221,7 +224,8 @@ class GameView(arcade.View):
             if self.is_game_started:
                 if self.do_player_choose_action():
                     self.get_agent_action()
-                self.last_it_pos = self.map.player.center_x
+                self.last_it_pos_x = self.map.player.center_x
+                self.last_it_pos_y = self.map.player.center_y
 
                     # Ennemy Logic
 
