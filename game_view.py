@@ -52,7 +52,8 @@ class GameView(arcade.View):
         self.run_result_history = []
 
     def on_show(self):
-        arcade.set_background_color(arcade.color.SKY_BLUE)  # Set background color
+        arcade.set_background_color(
+            arcade.color.SKY_BLUE)  # Set background color
 
     def setup(self):
         self.map = Map()
@@ -61,7 +62,6 @@ class GameView(arcade.View):
 
     # def spawn_enemy(self, x_position):
     #     self.map.spawn_enemy(x_position)
-
 
     def show_graph(self):
         plt.plot(self.run_result_history)
@@ -80,7 +80,8 @@ class GameView(arcade.View):
             pass
 
     def draw_hud(self):
-        screen_center_x = self.map.player.center_x - (self.camera.viewport_width / 2)
+        screen_center_x = self.map.player.center_x - \
+            (self.camera.viewport_width / 2)
         screen_center_y = 0
         arcade.draw_text(
             self.score, screen_center_x, screen_center_y, arcade.color.BLACK, 20
@@ -122,7 +123,8 @@ class GameView(arcade.View):
         )
 
     def center_camera_to_player(self):
-        screen_center_x = self.map.player.center_x - (self.camera.viewport_width / 2)
+        screen_center_x = self.map.player.center_x - \
+            (self.camera.viewport_width / 2)
         screen_center_y = 0
         player_centered = screen_center_x, screen_center_y
         self.camera.move_to(player_centered)
@@ -168,7 +170,8 @@ class GameView(arcade.View):
         self.map.player.change_x = PLAYER_MOVEMENT_SPEED
 
     def get_agent_action(self):
-        self.last_action_pos = int(self.map.player.center_x // TILE_SIZE)
+        self.last_action_pos = int(
+            self.map.player.center_x // self.map.tile_scaled)
 
         env = self.get_environment()
         state = self.qtable.get_state_key(env)
@@ -188,7 +191,7 @@ class GameView(arcade.View):
         self.score_history.append(self.score)
 
     def do_player_choose_action(self):
-        if self.last_action_pos < int(self.map.player.center_x // TILE_SIZE):
+        if self.last_action_pos < int(self.map.player.center_x // self.map.tile_scaled):
             return True
         elif int(self.last_it_pos_x) == int(self.map.player.center_x) and int(self.last_it_pos_y) == int(self.map.player.center_y):
             return True
@@ -227,7 +230,7 @@ class GameView(arcade.View):
                 self.last_it_pos_x = self.map.player.center_x
                 self.last_it_pos_y = self.map.player.center_y
 
-                    # Ennemy Logic
+                # Ennemy Logic
 
                 #     if self.has_enemy_spawned and len(self.action_history) >= 3:
                 #         action = self.action_history[-3]

@@ -15,6 +15,7 @@ class Map:
         self.player = None
         self.enemy = None
         self.tile_map = None
+        self.tile_scaled = None
         self.scene = None
         self.map_matrix = None
         self.last_press_time = None
@@ -30,7 +31,8 @@ class Map:
             },
         }
 
-        self.tile_map = arcade.load_tilemap(map_name, TILE_SCALING, layer_options)
+        self.tile_map = arcade.load_tilemap(
+            map_name, TILE_SCALING, layer_options)
 
         platforms_layer = self.tile_map.sprite_lists["Platforms"]
         coins_layer = self.tile_map.sprite_lists["Coins"]
@@ -40,10 +42,13 @@ class Map:
             [0 for _ in range(self.tile_map.width)] for _ in range(self.tile_map.height)
         ]
 
+        self.tile_scaled = self.tile_map.tile_width * self.tile_map.scaling
+
         for sprite in platforms_layer:
-            column = int((sprite.center_x) // (TILE_SIZE * TILE_SCALING))
+            column = int((sprite.center_x) // self.tile_scaled)
             row = int(
-                (self.tile_map.height * (TILE_SIZE * TILE_SCALING) - (sprite.center_y)) // (TILE_SIZE * TILE_SCALING)
+                (self.tile_map.height * self.tile_scaled -
+                 (sprite.center_y)) // self.tile_scaled
             )
 
             self.map_matrix[row][column] = 1
@@ -66,6 +71,7 @@ class Map:
             self.finish_line_x = column
 
         self.scene = arcade.Scene.from_tilemap(self.tile_map)
+
         # Creation of Player and Walls list in the base level
         self.spawn_player()
 
@@ -87,6 +93,7 @@ class Map:
     def change_player_gravity(self, do_change_gravity):
         if do_change_gravity:
             self.player.current_gravity = -self.player.current_gravity
+            self.player.change_y = 0
             self.player.physics_engine = arcade.PhysicsEnginePlatformer(
                 self.player,
                 gravity_constant=self.player.current_gravity,
@@ -119,12 +126,14 @@ class Map:
             return True
 
     def get_environment(self):
-        map_height = len(self.map_matrix)
-        player_current_x = int(self.player.relative_center_x() // TILE_SIZE)
+        map_height = self.tile_map.height
+        player_current_x = int(self.player.center_x //
+                               (self.tile_scaled))
         # Le y=0 de la matrice est en haut,alors que celui de l'écran
         # est en bas, il faut donc bidouiller un peu
         player_current_y = int(
-            (self.tile_map.height * TILE_SIZE - self.player.relative_center_y()) // TILE_SIZE
+            (self.tile_map.height * self.tile_scaled -
+             self.player.center_y) // self.tile_scaled
         )
 
         radar_opposite_side = False
