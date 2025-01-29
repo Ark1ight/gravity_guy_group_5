@@ -21,10 +21,8 @@ class Map:
         self.last_press_time = None
         self.finish_line_x = None
 
-    def setup(self):
+    def setup(self, map_name):
         # Pour éditer la map, utiliser Tiled (https://www.mapeditor.org/)
-        map_name = "resources/maps/map2.json"
-
         layer_options = {
             "Platforms": {
                 "use_spatial_hash": True,
@@ -67,7 +65,7 @@ class Map:
             self.map_matrix[row][column] = 2
 
         for sprite in finish_layer:
-            column = int((sprite.center_x * TILE_SCALING) // TILE_SIZE)
+            column = int(sprite.center_x // (TILE_SCALING * TILE_SIZE))
             self.finish_line_x = column
 
         self.scene = arcade.Scene.from_tilemap(self.tile_map)
@@ -122,7 +120,7 @@ class Map:
             )
 
     def is_player_at_finish_line(self):
-        if (self.player.relative_center_x() // TILE_SIZE) == self.finish_line_x:
+        if int(self.player.center_x // (self.tile_scaled)) == self.finish_line_x:
             return True
 
     def get_environment(self):
@@ -143,7 +141,7 @@ class Map:
         current_gravity = self.player.current_gravity
 
         try:
-            for i in range(player_current_y, -1, -1):
+            for i in range(player_current_y - 1, -1, -1):
                 if current_gravity > 0:
                     if self.map_matrix[i][player_current_x + 1] == 1:
                         radar_opposite_side = True
@@ -158,7 +156,7 @@ class Map:
                     radar_front = True
                     break
 
-            for i in range(player_current_y, map_height, 1):
+            for i in range(player_current_y + 1, map_height, 1):
                 if current_gravity > 0:
                     if self.map_matrix[i][player_current_x + 1] == 1:
                         radar_current_side = True
@@ -167,7 +165,8 @@ class Map:
                     if self.map_matrix[i][player_current_x + 1] == 1:
                         radar_opposite_side = True
                         break
-            pass
+            # if radar_opposite_side is True and radar_front is True and radar_current_side is True:
+            #     print("zaejhk")
         except Exception:
             # out of bound
             return (0, 0, 0)

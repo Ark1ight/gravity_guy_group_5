@@ -1,2 +1,2 @@
-arcade
+arcade==2.6.16
 matplotlib

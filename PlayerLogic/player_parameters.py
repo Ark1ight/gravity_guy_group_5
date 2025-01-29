@@ -1,11 +1,11 @@
 # player_parameters.py
 import arcade
 
-PLAYER_GRAVITY = 5
+PLAYER_GRAVITY = 8
 
 CHARACTER_SCALING = 0.1
 STARTING_X = 32
-STARTING_Y = 300
+STARTING_Y = 128
 TILE_SCALING = 0.39
 
 
@@ -43,5 +43,5 @@ class Player(arcade.Sprite):
         return self.center_y * TILE_SCALING
 
     def is_player_dead(self, screen_height):
-        if self.relative_center_y() < 0 or self.relative_center_y() > screen_height + 100:
+        if self.center_y < 0 or self.center_y > screen_height + 100:
             self.is_dead = True

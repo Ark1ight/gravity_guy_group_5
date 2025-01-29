@@ -1,3 +1,6 @@
+import math
+from random import randint
+import random
 import arcade
 import arcade.color
 import matplotlib.pyplot as plt
@@ -16,7 +19,7 @@ REWARD_WALL = -50
 SCREEN_WIDTH = 800
 SCREEN_HEIGHT = 800
 SCREEN_TITLE = "Gravity Guy"
-PLAYER_MOVEMENT_SPEED = 3
+PLAYER_MOVEMENT_SPEED = 2
 
 PLAYER_GRAVITY = 10
 ENEMY_GRAVITY = 10
@@ -51,13 +54,17 @@ class GameView(arcade.View):
         self.state_history = []
         self.run_result_history = []
 
+    def load_qtable(self, filename):
+        self.qtable.load(filename)
+
     def on_show(self):
         arcade.set_background_color(
             arcade.color.SKY_BLUE)  # Set background color
 
     def setup(self):
         self.map = Map()
-        self.map.setup()
+        mapnum = random.randint(1,4)
+        self.map.setup(f"resources/maps/map{mapnum}.json")
         self.camera = arcade.Camera(SCREEN_WIDTH, SCREEN_HEIGHT)
 
     # def spawn_enemy(self, x_position):
@@ -81,7 +88,7 @@ class GameView(arcade.View):
 
     def draw_hud(self):
         screen_center_x = self.map.player.center_x - \
-            (self.camera.viewport_width / 2)
+                          (self.camera.viewport_width / 2)
         screen_center_y = 0
         arcade.draw_text(
             self.score, screen_center_x, screen_center_y, arcade.color.BLACK, 20
@@ -124,7 +131,7 @@ class GameView(arcade.View):
 
     def center_camera_to_player(self):
         screen_center_x = self.map.player.center_x - \
-            (self.camera.viewport_width / 2)
+                          (self.camera.viewport_width / 2)
         screen_center_y = 0
         player_centered = screen_center_x, screen_center_y
         self.camera.move_to(player_centered)
@@ -159,8 +166,10 @@ class GameView(arcade.View):
 
         # Game restart
         self.run_result_history.append(self.score)
+        print(self.score)
         self.is_game_started = 1
-        self.map.setup()
+        mapnum = random.randint(1,4)
+        self.map.setup(f"resources/maps/map{mapnum}.json")
         self.action_history = []
         self.score_history = []
         self.state_history = []
@@ -193,7 +202,8 @@ class GameView(arcade.View):
     def do_player_choose_action(self):
         if self.last_action_pos < int(self.map.player.center_x // self.map.tile_scaled):
             return True
-        elif int(self.last_it_pos_x) == int(self.map.player.center_x) and int(self.last_it_pos_y) == int(self.map.player.center_y):
+        elif int(self.last_it_pos_x) == int(self.map.player.center_x) and int(self.last_it_pos_y) == int(
+                self.map.player.center_y):
             return True
         return False
 
