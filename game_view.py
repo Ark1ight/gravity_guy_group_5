@@ -1,120 +1,228 @@
-# game_view.py
-import time
+import math
+from random import randint
+import random
 import arcade
-from PlayerLogic.player_parameters import Player
+import arcade.color
+import matplotlib.pyplot as plt
+
+from game_map import Map
+from qtable import QTable
+
+REWARD_DEFAULT = 0
+REWARD_COIN = 100
+REWARD_GOAL = 1000
+REWARD_CHANGE_GRAV = -5
+REWARD_DIE = -1000
+REWARD_WALL = -50
 
 # Constants
-SCREEN_WIDTH = 1000
-SCREEN_HEIGHT = 650
+SCREEN_WIDTH = 800
+SCREEN_HEIGHT = 800
 SCREEN_TITLE = "Gravity Guy"
-PLAYER_MOVEMENT_SPEED = 10
-GRAVITY = 1
-TILE_SCALING = 0.1
-DEATH_SCALING = 0.5
-def death_screen_display(last_x, last_y):
-    img = arcade.load_texture('images/death_skull.png')
-    arcade.draw_texture_rectangle(last_x, last_y, 1250 * DEATH_SCALING, 700 * DEATH_SCALING, img)
+PLAYER_MOVEMENT_SPEED = 2
 
+PLAYER_GRAVITY = 10
+TILE_SCALING = 0.39
+DEATH_SCALING = 0.5
+
+TILE_SIZE = 128
 
 class GameView(arcade.View):
     def __init__(self):
         super().__init__()
-        self.scene = None
-        self.player = None
-        self.physics_engine = None
-        self.current_gravity = GRAVITY
+        self.map = None
+
         self.camera = None
-        self.last_press_time = 0
+        self.score = 0
+        self.last_action_pos = 0
+        self.last_it_pos_x = 0
+        self.last_it_pos_y = 0
+        self.is_game_started = 0
+        self.qtable = QTable()
+
+        self.action_history = []
+        self.score_history = []
+        self.state_history = []
+        self.run_result_history = []
+
+    def load_qtable(self, filename):
+        self.qtable.load(filename)
 
     def on_show(self):
-        arcade.set_background_color(arcade.color.SKY_BLUE)  # Set background color
+        arcade.set_background_color(
+            arcade.color.SKY_BLUE)  # Set background color
 
     def setup(self):
-        self.scene = arcade.Scene()
+        self.map = Map()
+        mapnum = random.randint(1,4)
+        self.map.setup(f"resources/maps/map{mapnum}.json")
         self.camera = arcade.Camera(SCREEN_WIDTH, SCREEN_HEIGHT)
 
-        # Creation of Player and Walls list in the base level
-        self.scene.add_sprite_list("Player")
-        self.scene.add_sprite_list("Walls", use_spatial_hash=True)
-        self.player = Player()
-        self.scene.add_sprite("Player", self.player)
-
-        for x in range(0, 1250, 64):
-            wall = arcade.Sprite("images/shrek2.jpg", TILE_SCALING)
-            wall.center_x = x
-            wall.center_y = 32
-            self.scene.add_sprite("Walls", wall)
-
-        for x in range(0, 320, 64):
-            wall = arcade.Sprite("images/shrek2.jpg", TILE_SCALING)
-            wall.center_x = x
-            wall.center_y = 500
-            self.scene.add_sprite("Walls", wall)
-
-
-        for x in range(680, 1200, 64):
-            wall = arcade.Sprite("images/shrek2.jpg", TILE_SCALING)
-            wall.center_x = x
-            wall.center_y = 500
-            self.scene.add_sprite("Walls", wall)
-
-        for x in range(325, 700, 64):
-            wall = arcade.Sprite("images/shrek2.jpg", TILE_SCALING)
-            wall.center_x = x
-            wall.center_y = 200
-            self.scene.add_sprite("Walls", wall)
-
-        for x in range(1500,2000, 64):
-            wall = arcade.Sprite("images/shrek2.jpg", TILE_SCALING)
-            wall.center_x = x
-            wall.center_y = 32
-            self.scene.add_sprite("Walls", wall)
-
-        for x in range(2200,2700, 64):
-            wall = arcade.Sprite("images/shrek2.jpg", TILE_SCALING)
-            wall.center_x = x
-            wall.center_y = 500
-            self.scene.add_sprite("Walls", wall)
-
-
-        self.physics_engine = arcade.PhysicsEnginePlatformer(
-            self.player, gravity_constant=self.current_gravity, walls=self.scene["Walls"]
-        )
+    def show_graph(self):
+        plt.plot(self.run_result_history)
+        plt.title("Score evolution")
+        plt.xlabel("Run")
+        plt.ylabel("Score")
+        plt.show()
 
     def on_draw(self):
         self.clear()
-        self.scene.draw()
-        if self.player.is_dead:
-            death_screen_display(self.player.center_x, self.player.center_y)
-        self.camera.use()
+        try:
+            self.map.scene.draw()
+            self.camera.use()
+            self.draw_hud()
+        except Exception:
+            pass
+
+    def draw_hud(self):
+        screen_center_x = self.map.player.center_x - \
+                          (self.camera.viewport_width / 2)
+        screen_center_y = 0
+        arcade.draw_text(
+            self.score, screen_center_x, screen_center_y, arcade.color.BLACK, 20
+        )
+        arcade.draw_text(
+            "Opposite:" + str(self.map.player.radar_opposite_side),
+            screen_center_x + 50,
+            screen_center_y + 100,
+            arcade.color.BLACK,
+            20,
+        )
+        arcade.draw_text(
+            "Front:" + str(self.map.player.radar_front),
+            screen_center_x + 50,
+            screen_center_y + 50,
+            arcade.color.BLACK,
+            20,
+        )
+        arcade.draw_text(
+            "Current:" + str(self.map.player.radar_current_side),
+            screen_center_x + 50,
+            screen_center_y,
+            arcade.color.BLACK,
+            20,
+        )
+        arcade.draw_text(
+            "Keep:" + str(self.map.player.score_keep),
+            screen_center_x + 250,
+            screen_center_y,
+            arcade.color.BLACK,
+            20,
+        )
+        arcade.draw_text(
+            "Change:" + str(self.map.player.score_change),
+            screen_center_x + 250,
+            screen_center_y + 50,
+            arcade.color.BLACK,
+            20,
+        )
 
     def center_camera_to_player(self):
-        screen_center_x = self.player.center_x - (self.camera.viewport_width / 2)
+        screen_center_x = self.map.player.center_x - \
+                          (self.camera.viewport_width / 2)
         screen_center_y = 0
-        if screen_center_x < 0:
-            screen_center_x = 0
-        if screen_center_y < 0:
-            screen_center_y = 0
         player_centered = screen_center_x, screen_center_y
         self.camera.move_to(player_centered)
 
-    def on_key_press(self, key, modifiers, current_gravity=GRAVITY):
+    def on_key_press(self, key, modifiers):
         if key == arcade.key.SPACE:
-            # Cooldown on gravity skill
-            current_time = time.time()
-            if current_time - self.last_press_time < self.player.skill_cooldown:
-                return
-            self.last_press_time = current_time
-            # Change of gravity
-            self.current_gravity *= -1
-            self.physics_engine = arcade.PhysicsEnginePlatformer(
-                self.player, gravity_constant=self.current_gravity, walls=self.scene["Walls"]
-            )
+            self.map.change_player_gravity(True)
         elif key == arcade.key.RIGHT or key == arcade.key.D:
-            self.player.change_x = PLAYER_MOVEMENT_SPEED
+            self.is_game_started = 1
+            self.map.player.change_x = PLAYER_MOVEMENT_SPEED
+
+    def get_environment(self):
+        env = self.map.get_environment()
+        self.map.player.radar_opposite_side = env[0]
+        self.map.player.radar_front = env[1]
+        self.map.player.radar_current_side = env[2]
+        return env
+
+    def get_score(self, do_change_grav=None):
+        if self.map.player.is_dead:
+            self.score += REWARD_DIE
+        elif int(self.last_it_pos_x) == int(self.map.player.center_x):
+            self.score += REWARD_WALL
+        elif do_change_grav:
+            self.score += REWARD_CHANGE_GRAV
+        else:
+            self.score += REWARD_DEFAULT
+
+    def restart_game(self):
+
+        # Game restart
+        self.run_result_history.append(self.score)
+        print(self.score)
+        self.is_game_started = 1
+        mapnum = random.randint(1,4)
+        self.map.setup(f"resources/maps/map{mapnum}.json")
+        self.action_history = []
+        self.score_history = []
+        self.state_history = []
+        self.score = 0
+        self.last_action_pos = 0
+        self.last_it_pos_x = 0
+        self.map.player.change_x = PLAYER_MOVEMENT_SPEED
+
+    def get_agent_action(self):
+        self.last_action_pos = int(
+            self.map.player.center_x // self.map.tile_scaled)
+
+        env = self.get_environment()
+        state = self.qtable.get_state_key(env)
+        action = self.qtable.best_action(state)
+        self.get_score(action)
+        self.map.change_player_gravity(action)
+        choices = self.qtable.dic[state] if state in self.qtable.dic else None
+        self.map.player.score_change = choices[True] if choices else None
+        self.map.player.score_keep = choices[False] if choices else None
+        self.qtable.set(
+            state,
+            action,
+            self.score - (self.score_history[-1] if self.score_history else 0),
+        )
+        self.action_history.append(action)
+        self.state_history.append(state)
+        self.score_history.append(self.score)
+
+    def do_player_choose_action(self):
+        if self.last_action_pos < int(self.map.player.center_x // self.map.tile_scaled):
+            return True
+        elif int(self.last_it_pos_x) == int(self.map.player.center_x) and int(self.last_it_pos_y) == int(
+                self.map.player.center_y):
+            return True
+        return False
+
+    def finish_line(self):
+        if self.map.is_player_at_finish_line():
+            self.score += REWARD_GOAL
+            self.qtable.set(
+                self.state_history[-1],
+                self.action_history[-1],
+                self.score - self.score_history[-1],
+            )
+            self.restart_game()
 
     def on_update(self, delta_time):
-        if not self.player.is_dead:
-            self.physics_engine.update()
+        # Player update
+        if not self.map.player.is_dead:
+            self.map.player.physics_engine.update()
             self.center_camera_to_player()
-            self.player.is_player_dead(SCREEN_HEIGHT)
+
+            self.map.player.is_player_dead(SCREEN_HEIGHT)
+            if self.map.player.is_dead:
+                self.get_score()
+                self.qtable.set(
+                    self.state_history[-1],
+                    self.action_history[-1],
+                    self.score - self.score_history[-1],
+                )
+                self.restart_game()
+            self.finish_line()
+            # Game update
+            if self.is_game_started:
+                if self.do_player_choose_action():
+                    self.get_agent_action()
+                self.last_it_pos_x = self.map.player.center_x
+                self.last_it_pos_y = self.map.player.center_y
+
