@@ -10,7 +10,7 @@ TILE_SCALING = 0.39
 
 
 class Player(arcade.Sprite):
-    def __init__(self, image_source="images/test.png"):
+    def __init__(self, image_source="resources/images/player_sprite.png"):
         super().__init__(image_source, CHARACTER_SCALING)
 
         self.center_x = STARTING_X

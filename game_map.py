@@ -1,19 +1,15 @@
 import arcade
 
-from EnemyLogic.enemy_parameters import Enemy
 from PlayerLogic.player_parameters import Player
 
 PLAYER_MOVEMENT_SPEED = 3
 TILE_SCALING = 0.39
 TILE_SIZE = 128
 
-ENEMY_GRAVITY = 10
-
 
 class Map:
     def __init__(self):
         self.player = None
-        self.enemy = None
         self.tile_map = None
         self.tile_scaled = None
         self.scene = None
@@ -51,10 +47,6 @@ class Map:
 
             self.map_matrix[row][column] = 1
 
-        # player_current_y = int(
-        #     (self.tile_map.height * TILE_SIZE - self.player.center_y) // TILE_SIZE
-        # )
-
         for sprite in coins_layer:
             column = int((sprite.center_x * TILE_SCALING) // TILE_SIZE)
             row = int(
@@ -72,9 +64,6 @@ class Map:
 
         # Creation of Player and Walls list in the base level
         self.spawn_player()
-
-        # Creation of Enemy
-        # self.spawn_enemy(300)
 
     def spawn_player(self):
         self.player = Player()
@@ -95,27 +84,6 @@ class Map:
             self.player.physics_engine = arcade.PhysicsEnginePlatformer(
                 self.player,
                 gravity_constant=self.player.current_gravity,
-                walls=self.scene["Platforms"],
-            )
-
-    def spawn_enemy(self, x_position):
-        self.enemy = Enemy()
-        self.enemy.spawn(300)
-
-        self.scene.add_sprite_list("Enemy")
-        self.scene.add_sprite("Enemy", self.enemy)
-        self.enemy.physics_engine = arcade.PhysicsEnginePlatformer(
-            self.enemy,
-            gravity_constant=self.player.current_gravity,
-            walls=self.scene["Platforms"],
-        )
-
-    def change_enemy_gravity(self, do_change_gravity):
-        if do_change_gravity:
-            self.enemy.current_gravity = -self.enemy.current_gravity
-            self.enemy.physics_engine = arcade.PhysicsEnginePlatformer(
-                self.enemy,
-                gravity_constant=self.enemy.current_gravity,
                 walls=self.scene["Platforms"],
             )
 
@@ -165,8 +133,6 @@ class Map:
                     if self.map_matrix[i][player_current_x + 1] == 1:
                         radar_opposite_side = True
                         break
-            # if radar_opposite_side is True and radar_front is True and radar_current_side is True:
-            #     print("zaejhk")
         except Exception:
             # out of bound
             return (0, 0, 0)

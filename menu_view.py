@@ -24,7 +24,7 @@ class MenuView(arcade.View):
             0,
             SCREEN_WIDTH,
             SCREEN_HEIGHT,
-            arcade.load_texture("images/background.png"),
+            arcade.load_texture("resources/images/background.png"),
         )
         # Titre
         arcade.draw_text(

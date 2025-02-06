@@ -22,19 +22,10 @@ SCREEN_TITLE = "Gravity Guy"
 PLAYER_MOVEMENT_SPEED = 2
 
 PLAYER_GRAVITY = 10
-ENEMY_GRAVITY = 10
 TILE_SCALING = 0.39
 DEATH_SCALING = 0.5
-ENEMY_SPAWN_DELAY = 1
 
 TILE_SIZE = 128
-
-
-# def death_screen_display(last_x, last_y):
-#     img = arcade.load_texture("images/death_skull.png")
-#     arcade.draw_texture_rectangle(
-#         last_x, last_y, 1250 * DEATH_SCALING, 700 * DEATH_SCALING, img
-#     )
 
 class GameView(arcade.View):
     def __init__(self):
@@ -66,9 +57,6 @@ class GameView(arcade.View):
         mapnum = random.randint(1,4)
         self.map.setup(f"resources/maps/map{mapnum}.json")
         self.camera = arcade.Camera(SCREEN_WIDTH, SCREEN_HEIGHT)
-
-    # def spawn_enemy(self, x_position):
-    #     self.map.spawn_enemy(x_position)
 
     def show_graph(self):
         plt.plot(self.run_result_history)
@@ -161,8 +149,6 @@ class GameView(arcade.View):
             self.score += REWARD_DEFAULT
 
     def restart_game(self):
-        # Player restart
-        # self.__init__()
 
         # Game restart
         self.run_result_history.append(self.score)
@@ -240,33 +226,3 @@ class GameView(arcade.View):
                 self.last_it_pos_x = self.map.player.center_x
                 self.last_it_pos_y = self.map.player.center_y
 
-                # Ennemy Logic
-
-                #     if self.has_enemy_spawned and len(self.action_history) >= 3:
-                #         action = self.action_history[-3]
-                #         if action == ACTION_CHANGE_GRAV:
-                #             self.enemy_current_gravity *= -1
-                #             self.enemy_physics_engine = arcade.PhysicsEnginePlatformer(
-                #                 self.map.enemy,
-                #                 gravity_constant=self.enemy_current_gravity,
-                #                 walls=self.map.scene["Platforms"],
-                #             )
-
-                #     if (
-                #         not self.has_enemy_spawned
-                #         and self.is_game_started
-                #         and len(self.action_history) >= 2
-                #     ):
-                #         self.spawn_enemy(self.map.player.center_x - SPRITE_SIZE * 2)
-                # self.lastPos = self.map.player.center_x % SPRITE_SIZE
-        # Enemy update
-
-        # if self.has_enemy_spawned and self.map.enemy and self.enemy_physics_engine:
-        #     self.enemy_physics_engine.update()
-        #     self.map.enemy.update()
-        #     self.map.enemy.center_x += PLAYER_MOVEMENT_SPEED
-
-        #     if self.map.player.is_dead:
-        #         self.map.enemy.remove_from_sprite_lists()
-        #         self.map.enemy = None
-        #         # Allow the enemy to respawn
